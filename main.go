@@ -45,6 +45,7 @@ func main() {
 	flag.BoolVar(&opts.WorkDaysOnly, "workdaysOnly", false, "only workdays")
 	flag.StringVar(&opts.StartDate, "startDate", "", "start date")
 	flag.StringVar(&opts.EndDate, "endDate", "", "end date")
+	flag.StringVar(&opts.Repo, "repo", "", "your private repo url (e.g. https://github.com/navicstein/fake-contributions-repo.git")
 
 	flag.StringVar(&opts.UserName, "username", "navicstein", "your github username")
 	flag.StringVar(&opts.AccessToken, "accessToken", "", "your github access token used for pushing & cloning private repos")
@@ -90,10 +91,8 @@ func runFakeContributions(opts *Options) (err error) {
 	// Create git history folder.
 	_ = os.Mkdir(tmpFolder, os.ModePerm)
 
-	cloneUrl := "https://github.com/navicstein/fake-contributions-repo.git"
-
 	// Clone the repository
-	logger.Info("Cloning repository into", "path", tmpFolder, "cloneUrl", cloneUrl)
+	logger.Info("Cloning repository into", "path", tmpFolder, "cloneUrl", opts.Repo)
 
 	repo, err := git.PlainClone(tmpFolder, false, &git.CloneOptions{
 		Auth: &http.BasicAuth{
@@ -101,7 +100,7 @@ func runFakeContributions(opts *Options) (err error) {
 			Password: opts.AccessToken,
 		},
 		Progress: os.Stdout,
-		URL:      cloneUrl,
+		URL:      opts.Repo,
 	})
 	if err != nil {
 		return
@@ -134,7 +133,7 @@ func runFakeContributions(opts *Options) (err error) {
 	logger.Info("Total commits have been created:", "length", len(commitDateList))
 
 	// Push commits to the repository.
-	logger.Info("Pushing commits to the repository: ", "repo", cloneUrl)
+	logger.Info("Pushing commits to the repository: ", "repo", opts.Repo)
 	pushOpts := git.PushOptions{
 		Auth: &http.BasicAuth{
 			Username: opts.UserName,
